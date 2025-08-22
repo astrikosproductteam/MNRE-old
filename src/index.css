@@ -1,0 +1,99 @@
+@import './styles/theme.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Apply theme styles globally */
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+  
+  body {
+    @apply antialiased;
+    background: linear-gradient(135deg, #0f172a 0%, #1a202c 100%);
+    color: #f8fafc;
+  }
+}
+
+@layer components {
+  .glass-morphism {
+    @apply bg-slate-900/70 backdrop-blur-md border border-blue-500/30 rounded-xl shadow-2xl;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+  
+  .neon-border {
+    @apply border border-blue-400/50;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.3), inset 0 0 10px rgba(59, 130, 246, 0.1);
+  }
+  
+  .holographic-bg {
+    background: linear-gradient(45deg, transparent 30%, rgba(59, 130, 246, 0.1) 50%, transparent 70%);
+    background-size: 200% 200%;
+    animation: holographicShimmer 3s linear infinite;
+  }
+  
+  .status-glow-online {
+    @apply bg-green-500;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+  }
+  
+  .status-glow-degraded {
+    @apply bg-yellow-500;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+  }
+  
+  .status-glow-offline {
+    @apply bg-red-500;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+  }
+  
+  .status-glow-tamper {
+    @apply bg-purple-500;
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.6);
+  }
+}
+
+@layer utilities {
+  .text-glow {
+    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes holographicShimmer {
+  0% { background-position: -200% -200%; }
+  100% { background-position: 200% 200%; }
+}
+
+/* Custom slider styling */
+.slider-thumb::-webkit-slider-thumb {
+  appearance: none;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  border: 2px solid #1e293b;
+}
+
+.slider-thumb::-moz-range-thumb {
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  border: 2px solid #1e293b;
+}
