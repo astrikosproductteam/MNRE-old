@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Asset, WorkOrder, Alert, KPIData, MapViewState, LayerConfig, RiskAssessment } from '../types';
-import { useState } from 'react';
+
 import Modal from './Modal';
 import { detailedAssetData } from '../data/enhancedMockData';
 
