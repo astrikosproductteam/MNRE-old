@@ -2,6 +2,10 @@ import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { TrendingUp, TrendingDown, Zap, Battery, AlertTriangle, CheckCircle } from 'lucide-react';
 import { KPIData, Asset, WorkOrder } from '../types';
+import EnhancedKPICard from './EnhancedKPICard';
+import FilterDropdown from './FilterDropdown';
+import { indianStates, majorCities, realisticKPIDetails, stateWisePerformance } from '../data/enhancedMockData';
+import { useState } from 'react';
 
 interface KPIDashboardProps {
   kpiData: KPIData[];
@@ -10,6 +14,8 @@ interface KPIDashboardProps {
 }
 
 export default function KPIDashboard({ kpiData, assets, workOrders }: KPIDashboardProps) {
+  const [selectedState, setSelectedState] = useState('all');
+  const [selectedCity, setSelectedCity] = useState('all');
   // Real-time metrics calculation
   const onlineAssets = assets.filter(a => a.status === 'online').length;
   const criticalAlerts = assets.filter(a => a.status === 'tamper' || a.status === 'offline').length;
@@ -76,110 +82,120 @@ export default function KPIDashboard({ kpiData, assets, workOrders }: KPIDashboa
   }));
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full space-y-0">
+      {/* Header with Filters */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white mb-2">MNRE National RTS Dashboard</h2>
-        <p className="text-slate-400">Real-time monitoring and analytics for renewable energy systems</p>
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center space-y-4 lg:space-y-0">
+          <div>
+            <h2 className="text-3xl font-bold text-white mb-2 glow-text">MNRE National RTS Dashboard</h2>
+            <p className="text-slate-400">Real-time monitoring and analytics for renewable energy systems</p>
+          </div>
+          <div className="flex items-center space-x-4">
+            <FilterDropdown
+              label="State"
+              options={indianStates}
+              value={selectedState}
+              onChange={setSelectedState}
+            />
+            <FilterDropdown
+              label="City"
+              options={majorCities[selectedState as keyof typeof majorCities] || majorCities.all}
+              value={selectedCity}
+              onChange={setSelectedCity}
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <div className="bg-gradient-to-r from-cyan-500 to-cyan-600 rounded-lg p-4 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-cyan-100 text-sm">Online Assets</p>
-              <p className="text-2xl font-bold">{onlineAssets}/{assets.length}</p>
-            </div>
-            <CheckCircle className="w-8 h-8 text-cyan-200" />
-          </div>
-          <div className="mt-2">
-            <div className="w-full bg-cyan-400/30 rounded-full h-2">
-              <div 
-                className="bg-white h-2 rounded-full transition-all duration-300" 
-                style={{ width: `${(onlineAssets / assets.length) * 100}%` }}
-              ></div>
-            </div>
-          </div>
-        </div>
+      {/* Enhanced Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-0 mb-0">
+        <EnhancedKPICard
+          title="Online Assets"
+          value={`${onlineAssets}/${assets.length}`}
+          trend="up"
+          trendValue="+2.3% vs last week"
+          icon={<CheckCircle className="w-6 h-6" />}
+          color="#06b6d4"
+          details={realisticKPIDetails.onlineAssets}
+        />
+        
+        <EnhancedKPICard
+          title="Total Capacity"
+          value={totalCapacity.toFixed(1)}
+          unit="MW"
+          trend="up"
+          trendValue="+5.7% this month"
+          icon={<Zap className="w-6 h-6" />}
+          color="#3b82f6"
+          details={realisticKPIDetails.totalCapacity}
+        />
+        
+        <EnhancedKPICard
+          title="Generation Today"
+          value={(totalGeneration / 1000).toFixed(1)}
+          unit="MWh"
+          trend="up"
+          trendValue="+8.2% vs yesterday"
+          icon={<TrendingUp className="w-6 h-6" />}
+          color="#10b981"
+          details={realisticKPIDetails.generation}
+        />
+        
+        <EnhancedKPICard
+          title="Critical Issues"
+          value={criticalAlerts}
+          trend="down"
+          trendValue="-15% this week"
+          icon={<AlertTriangle className="w-6 h-6" />}
+          color="#ef4444"
+          details={realisticKPIDetails.criticalIssues}
+        />
 
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-blue-100 text-sm">Total Capacity</p>
-              <p className="text-2xl font-bold">{totalCapacity.toFixed(1)} kW</p>
-            </div>
-            <Zap className="w-8 h-8 text-blue-200" />
-          </div>
-          <p className="text-blue-100 text-xs mt-1">Across {assets.length} installations</p>
-        </div>
-
-        <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-green-100 text-sm">Generation Today</p>
-              <p className="text-2xl font-bold">{totalGeneration.toFixed(0)} kWh</p>
-            </div>
-            <TrendingUp className="w-8 h-8 text-green-200" />
-          </div>
-          <p className="text-green-100 text-xs mt-1">₹{(totalGeneration * 4.5).toLocaleString()} revenue</p>
-        </div>
-
-        <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-lg p-4 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-red-100 text-sm">Critical Issues</p>
-              <p className="text-2xl font-bold">{criticalAlerts}</p>
-            </div>
-            <AlertTriangle className="w-8 h-8 text-red-200" />
-          </div>
-          <p className="text-red-100 text-xs mt-1">{activeWorkOrders} active work orders</p>
-        </div>
-
-        <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-purple-100 text-sm">Performance Ratio</p>
-              <p className="text-2xl font-bold">{(avgPR * 100).toFixed(1)}%</p>
-            </div>
-            <Battery className="w-8 h-8 text-purple-200" />
-          </div>
-          <p className="text-purple-100 text-xs mt-1">Target: 85%</p>
-        </div>
+        <EnhancedKPICard
+          title="Performance Ratio"
+          value={(avgPR * 100).toFixed(1)}
+          unit="%"
+          trend="stable"
+          trendValue="Target: 85%"
+          icon={<Battery className="w-6 h-6" />}
+          color="#8b5cf6"
+          details={realisticKPIDetails.performanceRatio}
+        />
       </div>
 
       {/* Secondary Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="glass-morphism p-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-0 mb-0 bg-gradient-to-r from-slate-900/50 to-slate-800/50 p-6 angular-gradient-1">
+        <div className="glass-morphism p-4 interactive-card">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-white font-semibold">System Availability</h3>
             <CheckCircle className="w-5 h-5 text-green-400" />
           </div>
           <div className="text-2xl font-bold text-white mb-1">{avgAvailability.toFixed(1)}%</div>
-          <div className="w-full bg-slate-700 rounded-full h-2">
+          <div className="w-full alien-progress h-3">
             <div 
-              className="bg-green-400 h-2 rounded-full transition-all duration-300" 
+              className="h-full rounded-full transition-all duration-500" 
               style={{ width: `${avgAvailability}%` }}
             ></div>
           </div>
           <p className="text-slate-400 text-xs mt-1">Last 30 days average</p>
         </div>
 
-        <div className="glass-morphism p-4">
+        <div className="glass-morphism p-4 interactive-card angular-gradient-2">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-white font-semibold mb-1">CO₂ Impact</h3>
-              <div className="text-2xl font-bold text-teal-400">{totalCO2Avoided.toFixed(1)} tons</div>
+              <div className="text-2xl font-bold text-teal-400 glow-text">{totalCO2Avoided.toFixed(1)} tons</div>
               <p className="text-slate-400 text-xs">Carbon avoided today</p>
             </div>
             <TrendingDown className="w-8 h-8 text-teal-400" />
           </div>
         </div>
 
-        <div className="glass-morphism p-4">
+        <div className="glass-morphism p-4 interactive-card angular-gradient-3">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-white font-semibold mb-1">Revenue Impact</h3>
-              <div className="text-2xl font-bold text-yellow-400">₹{(totalGeneration * 4.5 / 1000).toFixed(1)}K</div>
+              <div className="text-2xl font-bold text-yellow-400 glow-text">₹{(totalGeneration * 4.5 / 1000).toFixed(1)}K</div>
               <p className="text-slate-400 text-xs">Today's generation value</p>
             </div>
             <TrendingUp className="w-8 h-8 text-yellow-400" />
@@ -187,10 +203,20 @@ export default function KPIDashboard({ kpiData, assets, workOrders }: KPIDashboa
         </div>
       </div>
 
+      {/* State Performance Summary */}
+      {selectedState !== 'all' && stateWisePerformance[selectedState as keyof typeof stateWisePerformance] && (
+        <div className="glass-morphism p-6 mb-0 interactive-card">
+          <h3 className="text-lg font-semibold text-white mb-4 glow-text">
+            {indianStates.find(s => s.value === selectedState)?.label} Performance Summary
+          </h3>
+          {/* Add state-specific performance data here */}
+        </div>
+      )}
+
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 mb-0 bg-gradient-to-br from-slate-900/30 to-slate-800/30 p-6">
         {/* Asset Status Distribution */}
-        <div className="glass-morphism p-6">
+        <div className="glass-morphism p-6 interactive-card chart-glow">
           <h3 className="text-lg font-semibold text-white mb-4">Asset Status Distribution</h3>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
@@ -224,7 +250,7 @@ export default function KPIDashboard({ kpiData, assets, workOrders }: KPIDashboa
         </div>
 
         {/* Work Order Priority */}
-        <div className="glass-morphism p-6">
+        <div className="glass-morphism p-6 interactive-card chart-glow angular-gradient-1">
           <h3 className="text-lg font-semibold text-white mb-4">Work Order Priority</h3>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
@@ -259,7 +285,7 @@ export default function KPIDashboard({ kpiData, assets, workOrders }: KPIDashboa
       </div>
 
       {/* State Performance */}
-      <div className="glass-morphism p-6">
+      <div className="glass-morphism p-6 interactive-card chart-glow angular-gradient-2">
         <h3 className="text-lg font-semibold text-white mb-4">Performance by State</h3>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={stateData}>

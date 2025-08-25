@@ -2,6 +2,9 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Asset, WorkOrder, Alert, KPIData, MapViewState, LayerConfig, RiskAssessment } from '../types';
+import { useState } from 'react';
+import Modal from './Modal';
+import { detailedAssetData } from '../data/enhancedMockData';
 
 interface GISMapProps {
   assets: Asset[];
@@ -48,6 +51,8 @@ export default function GISMap({
   onAssetClick,
   onMapMove
 }: GISMapProps) {
+  const [selectedAssetModal, setSelectedAssetModal] = useState<any>(null);
+  
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -63,29 +68,39 @@ export default function GISMap({
     if (!mapContainer.current || map.current) return;
 
     try {
+      // Enhanced map style with better visual appeal
+      const enhancedStyle = {
+        version: 8,
+        glyphs: 'https://demotiles.maplibre.org/glyphs/{fontstack}/{range}.pbf',
+        sources: {
+          'osm': {
+            type: 'raster',
+            tiles: [
+              'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+            ],
+            tileSize: 256,
+            attribution: '© OpenStreetMap contributors'
+          },
+          'terrain': {
+            type: 'raster',
+            tiles: [
+              'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+            ],
+            tileSize: 256
+          }
+        },
+        layers: [
+          {
+            id: 'osm',
+            type: 'raster',
+            source: 'osm'
+          }
+        ]
+      };
+
       map.current = new maplibregl.Map({
         container: mapContainer.current,
-        style: {
-          version: 8,
-          glyphs: 'https://demotiles.maplibre.org/glyphs/{fontstack}/{range}.pbf',
-          sources: {
-            'osm': {
-              type: 'raster',
-              tiles: [
-                'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-              ],
-              tileSize: 256,
-              attribution: '© OpenStreetMap contributors'
-            }
-          },
-          layers: [
-            {
-              id: 'osm',
-              type: 'raster',
-              source: 'osm'
-            }
-          ]
-        },
+        style: enhancedStyle,
         center: [78.9629, 20.5937], // Center of India
         zoom: 5,
         pitch: 0,
@@ -281,6 +296,11 @@ export default function GISMap({
               const asset = assets.find(a => a.id === assetId);
               if (asset) {
                 onAssetClick(asset);
+                // Show enhanced modal with detailed asset information
+                const detailedAsset = detailedAssetData.find(d => d.id.includes(asset.site_id.split('-')[2]));
+                if (detailedAsset) {
+                  setSelectedAssetModal(detailedAsset);
+                }
               }
             }
           });
@@ -890,6 +910,84 @@ export default function GISMap({
           <div>Work Orders: {workOrders.length}</div>
           <div>Alerts: {alerts.filter(a => !a.acknowledged).length}</div>
         </div>
+      )}
+      
+      {/* Enhanced Asset Details Modal */}
+      {selectedAssetModal && (
+        <Modal
+          isOpen={!!selectedAssetModal}
+          onClose={() => setSelectedAssetModal(null)}
+          title={`Asset Details - ${selectedAssetModal.site_id}`}
+          size="xl"
+        >
+          <div className="space-y-6">
+            {/* Asset Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-lg font-semibold text-white mb-2">Basic Information</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Type:</span>
+                      <span className="text-white">{selectedAssetModal.type}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Location:</span>
+                      <span className="text-white">{selectedAssetModal.location}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Capacity:</span>
+                      <span className="text-white">{selectedAssetModal.capacity}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Owner:</span>
+                      <span className="text-white">{selectedAssetModal.owner}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Commissioned:</span>
+                      <span className="text-white">{selectedAssetModal.commissioned}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-lg font-semibold text-white mb-2">Performance Today</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-slate-800/50 p-3 rounded-lg text-center">
+                      <div className="text-lg font-bold text-green-400">{selectedAssetModal.performance.todayGeneration}</div>
+                      <div className="text-xs text-slate-400">Today's Generation</div>
+                    </div>
+                    <div className="bg-slate-800/50 p-3 rounded-lg text-center">
+                      <div className="text-lg font-bold text-blue-400">{selectedAssetModal.performance.pr}%</div>
+                      <div className="text-xs text-slate-400">Performance Ratio</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Financial Information */}
+            <div>
+              <h4 className="text-lg font-semibold text-white mb-4">Financial Details</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-slate-800/50 p-4 rounded-lg">
+                  <div className="text-sm text-slate-400">CAPEX</div>
+                  <div className="text-lg font-bold text-white">{selectedAssetModal.financials.capex}</div>
+                </div>
+                <div className="bg-slate-800/50 p-4 rounded-lg">
+                  <div className="text-sm text-slate-400">Current ROI</div>
+                  <div className="text-lg font-bold text-green-400">{selectedAssetModal.financials.currentROI}</div>
+                </div>
+                <div className="bg-slate-800/50 p-4 rounded-lg">
+                  <div className="text-sm text-slate-400">Tariff Rate</div>
+                  <div className="text-lg font-bold text-cyan-400">{selectedAssetModal.financials.tariff}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   );
