@@ -125,7 +125,7 @@ export default function EnhancedKPICard({
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           title={`${title} - Detailed Analysis`}
-          size="lg"
+          size="xl"
         >
           <div className="space-y-6">
             <div>

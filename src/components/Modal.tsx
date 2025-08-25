@@ -21,7 +21,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div className="fixed inset-0 z-[9999] overflow-y-auto">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -38,7 +38,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className={`relative w-full ${sizeClasses[size]} modal-gradient rounded-2xl shadow-2xl border border-cyan-500/30`}
+              className={`relative w-full ${sizeClasses[size]} modal-gradient rounded-2xl shadow-2xl border border-cyan-500/30 z-[9999]`}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
