@@ -1,9 +1,179 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area } from 'recharts';
 import { TrendingUp, TrendingDown, Zap, Battery, AlertTriangle, CheckCircle, Wrench, Users, Lightbulb, MapPin, Calendar, Activity } from 'lucide-react';
-import { KPIData, Asset, WorkOrder } from '../types';
-import EnhancedKPICard from './EnhancedKPICard';
-import FilterDropdown from './FilterDropdown';
+
+// Define proper TypeScript interfaces
+interface KPIData {
+  site_id: string;
+  yield_kwh: number;
+  pr: number;
+  availability_pct: number;
+  co2_avoided_tons: number;
+}
+
+interface Asset {
+  id: string;
+  status: 'online' | 'offline' | 'degraded' | 'maintenance' | 'tamper';
+  kW: number;
+}
+
+interface WorkOrder {
+  id: string;
+  status: 'open' | 'in_progress' | 'completed';
+  priority: 'critical' | 'high' | 'medium' | 'low';
+}
+
+interface KPIDetails {
+  description: string;
+  target: string;
+  progress: number;
+  breakdown?: Array<{ label: string; value: string; color?: string }>;
+}
+
+interface EnhancedKPICardProps {
+  title: string;
+  value: string | number;
+  unit?: string;
+  trend?: 'up' | 'down' | 'stable';
+  trendValue?: string;
+  icon: React.ReactNode;
+  color: string;
+  details: KPIDetails;
+}
+
+// Enhanced KPI Card Component with proper error handling
+const EnhancedKPICard: React.FC<EnhancedKPICardProps> = ({
+  title,
+  value,
+  unit = '',
+  trend = 'stable',
+  trendValue = '',
+  icon,
+  color,
+  details
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const getTrendIcon = () => {
+    switch (trend) {
+      case 'up': return <TrendingUp className="w-4 h-4 text-green-400" />;
+      case 'down': return <TrendingDown className="w-4 h-4 text-red-400" />;
+      default: return <Activity className="w-4 h-4 text-yellow-400" />;
+    }
+  };
+
+  const getTrendColor = () => {
+    switch (trend) {
+      case 'up': return 'text-green-400';
+      case 'down': return 'text-red-400';
+      default: return 'text-yellow-400';
+    }
+  };
+
+  return (
+    <div 
+      className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-4 cursor-pointer transition-all duration-300 hover:border-blue-500/50 hover:bg-slate-800/70"
+      onClick={() => setIsExpanded(!isExpanded)}
+    >
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 rounded-lg" style={{ backgroundColor: `${color}20`, color }}>
+            {icon}
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-slate-300">{title}</h3>
+            <div className="flex items-baseline space-x-1">
+              <span className="text-xl font-bold text-white">{value}</span>
+              {unit && <span className="text-sm text-slate-400">{unit}</span>}
+            </div>
+          </div>
+        </div>
+        {trendValue && (
+          <div className={`flex items-center space-x-1 ${getTrendColor()}`}>
+            {getTrendIcon()}
+            <span className="text-xs">{trendValue}</span>
+          </div>
+        )}
+      </div>
+
+      {isExpanded && details && (
+        <div className="mt-4 pt-4 border-t border-slate-700/50">
+          <div className="space-y-3">
+            <p className="text-xs text-slate-400">{details.description}</p>
+            
+            {details.progress !== undefined && (
+              <div>
+                <div className="flex justify-between text-xs text-slate-400 mb-1">
+                  <span>Progress</span>
+                  <span>{details.progress.toFixed(1)}%</span>
+                </div>
+                <div className="w-full bg-slate-700 rounded-full h-2">
+                  <div 
+                    className="h-2 rounded-full transition-all duration-500"
+                    style={{ 
+                      width: `${Math.min(100, Math.max(0, details.progress))}%`,
+                      backgroundColor: color
+                    }}
+                  ></div>
+                </div>
+              </div>
+            )}
+
+            <div className="text-xs text-slate-500">Target: {details.target}</div>
+
+            {details.breakdown && details.breakdown.length > 0 && (
+              <div className="space-y-1">
+                {details.breakdown.map((item, index) => (
+                  <div key={index} className="flex justify-between items-center text-xs">
+                    <span className="text-slate-400">{item.label}</span>
+                    <span className="text-white font-medium">{item.value}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Filter Dropdown Component
+interface FilterOption {
+  value: string;
+  label: string;
+}
+
+interface FilterDropdownProps {
+  label: string;
+  options: FilterOption[];
+  value: string;
+  onChange: (value: string) => void;
+}
+
+const FilterDropdown: React.FC<FilterDropdownProps> = ({ label, options, value, onChange }) => (
+  <div className="relative">
+    <label className="block text-xs font-medium text-slate-400 mb-1">{label}</label>
+    <select 
+      value={value} 
+      onChange={(e) => onChange(e.target.value)}
+      className="bg-slate-800/50 border border-slate-600/50 rounded-lg px-3 py-2 text-white text-sm focus:border-blue-500 focus:outline-none"
+    >
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  </div>
+);
+
+// Main Dashboard Props Interface
+interface KPIDashboardProps {
+  kpiData?: KPIData[];
+  assets?: Asset[];
+  workOrders?: WorkOrder[];
+}
 
 // Enhanced realistic data with proper KPI structure
 const nationalKPITargets = {
@@ -129,7 +299,7 @@ const aiAdvisoryInsights = [
   },
   {
     type: "optimization",
-    title: "Performance Optimization",
+    title: "Performance Optimization", 
     message: "Weather forecast shows 3 days of high solar irradiance. Expect 12-15% increase in generation. Prepare grid balancing.",
     icon: <TrendingUp className="w-5 h-5" />,
     priority: "Medium"
@@ -143,13 +313,11 @@ const aiAdvisoryInsights = [
   }
 ];
 
-interface KPIDashboardProps {
-  kpiData: KPIData[];
-  assets: Asset[];
-  workOrders: WorkOrder[];
-}
-
-export default function KPIDashboard({ kpiData, assets, workOrders }: KPIDashboardProps) {
+export default function KPIDashboard({ 
+  kpiData = [], 
+  assets = [], 
+  workOrders = [] 
+}: KPIDashboardProps) {
   const [selectedState, setSelectedState] = useState('all');
   const [selectedCity, setSelectedCity] = useState('all');
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -194,7 +362,7 @@ export default function KPIDashboard({ kpiData, assets, workOrders }: KPIDashboa
     return () => clearInterval(interval);
   }, [realTimeData.totalInstallations, realTimeData.cumulativeCapacity]);
 
-  // Filter data based on selections
+  // Safe data filtering with null checks
   const getFilteredData = () => {
     if (selectedState === 'all') return stateWiseData;
     
@@ -213,13 +381,13 @@ export default function KPIDashboard({ kpiData, assets, workOrders }: KPIDashboa
     return "#ef4444"; // Red
   };
 
-  // Generate chart data
+  // Generate chart data with safety checks
   const statePerformanceData = Object.entries(filteredStateData).map(([state, data]) => ({
     state: state.length > 8 ? state.substring(0, 8) + '..' : state,
-    capacity: data.capacity,
-    installations: Math.floor(data.installations / 1000),
-    workingPercent: data.workingPercent,
-    surplus: data.surplusExported
+    capacity: data.capacity || 0,
+    installations: Math.floor((data.installations || 0) / 1000),
+    workingPercent: data.workingPercent || 0,
+    surplus: data.surplusExported || 0
   }));
 
   const performanceTimeData = [
@@ -239,8 +407,71 @@ export default function KPIDashboard({ kpiData, assets, workOrders }: KPIDashboa
   ];
 
   const majorCities = selectedState !== 'all' && selectedStateData 
-    ? [{ value: 'all', label: 'All Cities' }, ...selectedStateData.cities.map(city => ({ value: city.toLowerCase(), label: city }))]
+    ? [{ value: 'all', label: 'All Cities' }, ...(selectedStateData.cities || []).map(city => ({ value: city.toLowerCase(), label: city }))]
     : [{ value: 'all', label: 'All Cities' }, ...cityAcceleratorCities.map(city => ({ value: city.name.toLowerCase(), label: city.name }))];
+
+  // KPI Details with proper structure
+  const kpiDetails = {
+    totalInstallations: {
+      description: "Total rooftop solar installations across India under PM Surya Ghar scheme",
+      target: "1 Crore households by 2027",
+      progress: (realTimeData.totalInstallations / nationalKPITargets.targetHouseholds) * 100,
+      breakdown: [
+        { label: "This Month", value: "+70K installations" },
+        { label: "Avg. Size", value: "3.2 kW" },
+        { label: "States Active", value: "28+" }
+      ]
+    },
+    workingSystems: {
+      description: "Currently operational and generating solar installations",
+      target: ">95% operational efficiency",
+      progress: (realTimeData.workingInstallations/realTimeData.totalInstallations)*100,
+      breakdown: [
+        { label: "Online", value: realTimeData.workingInstallations.toLocaleString() },
+        { label: "Efficiency", value: `${((realTimeData.workingInstallations/realTimeData.totalInstallations)*100).toFixed(1)}%` }
+      ]
+    },
+    nonWorkingSystems: {
+      description: "Systems requiring maintenance, repair, or showing degraded performance",
+      target: "<5% downtime across network",
+      progress: 100 - ((realTimeData.nonWorkingInstallations/realTimeData.totalInstallations)*100),
+      breakdown: [
+        { label: "Maintenance", value: "45%" },
+        { label: "Technical Issues", value: "35%" },
+        { label: "Grid Issues", value: "20%" }
+      ]
+    },
+    installedCapacity: {
+      description: "Total commissioned rooftop solar capacity across India",
+      target: "40,000 MW by 2026 (National Solar Mission)",
+      progress: (realTimeData.cumulativeCapacity/nationalKPITargets.totalCapacity)*100,
+      breakdown: [
+        { label: "Residential", value: "3,024 MW" },
+        { label: "Commercial", value: "14,000 MW" },
+        { label: "Government", value: "2,200 MW" }
+      ]
+    },
+    todayGeneration: {
+      description: "Daily energy generation from all RTS systems nationwide",
+      target: "Weather and seasonal dependent",
+      progress: 85,
+      breakdown: [
+        { label: "Peak Hour", value: "12:30 PM" },
+        { label: "Performance Ratio", value: "82.4%" },
+        { label: "CO₂ Avoided", value: "8,400 tons" }
+      ]
+    },
+    liveGeneration: {
+      description: "Real-time power generation from all operational systems",
+      target: "Varies by time of day and weather",
+      progress: Math.min(100, (realTimeData.livePowerGeneration / (realTimeData.cumulativeCapacity * 0.8)) * 100),
+      breakdown: [
+        { label: "Current", value: `${realTimeData.livePowerGeneration} MW` },
+        { label: "Peak Today", value: `${Math.floor(realTimeData.cumulativeCapacity * 0.78)} MW` },
+        { label: "Utilization", value: `${Math.min(100, (realTimeData.livePowerGeneration / (realTimeData.cumulativeCapacity * 0.8)) * 100).toFixed(1)}%` }
+      ]
+    }
+  };
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 space-y-6">
@@ -318,11 +549,7 @@ export default function KPIDashboard({ kpiData, assets, workOrders }: KPIDashboa
           trendValue="+70K this month"
           icon={<Users className="w-6 h-6" />}
           color="#06b6d4"
-          details={{
-            description: "Total rooftop solar installations across India",
-            target: "1 Crore by 2027",
-            progress: (realTimeData.totalInstallations / nationalKPITargets.targetHouseholds) * 100
-          }}
+          details={kpiDetails.totalInstallations}
         />
         
         <EnhancedKPICard
@@ -333,11 +560,7 @@ export default function KPIDashboard({ kpiData, assets, workOrders }: KPIDashboa
           trendValue="Operational efficiency"
           icon={<CheckCircle className="w-6 h-6" />}
           color="#10b981"
-          details={{
-            description: "Currently operational solar installations",
-            target: ">95% operational",
-            progress: (realTimeData.workingInstallations/realTimeData.totalInstallations)*100
-          }}
+          details={kpiDetails.workingSystems}
         />
         
         <EnhancedKPICard
@@ -347,11 +570,7 @@ export default function KPIDashboard({ kpiData, assets, workOrders }: KPIDashboa
           trendValue="-5% this week"
           icon={<AlertTriangle className="w-6 h-6" />}
           color="#ef4444"
-          details={{
-            description: "Systems requiring maintenance or repair",
-            target: "<5% downtime",
-            progress: 100 - ((realTimeData.nonWorkingInstallations/realTimeData.totalInstallations)*100)
-          }}
+          details={kpiDetails.nonWorkingSystems}
         />
 
         <EnhancedKPICard
@@ -362,11 +581,7 @@ export default function KPIDashboard({ kpiData, assets, workOrders }: KPIDashboa
           trendValue={`${((realTimeData.cumulativeCapacity/nationalKPITargets.totalCapacity)*100).toFixed(1)}% of target`}
           icon={<Battery className="w-6 h-6" />}
           color={getKPIColor(realTimeData.cumulativeCapacity, nationalKPITargets.totalCapacity)}
-          details={{
-            description: "Total commissioned rooftop solar capacity",
-            target: "40,000 MW by 2026",
-            progress: (realTimeData.cumulativeCapacity/nationalKPITargets.totalCapacity)*100
-          }}
+          details={kpiDetails.installedCapacity}
         />
 
         <EnhancedKPICard
@@ -377,11 +592,7 @@ export default function KPIDashboard({ kpiData, assets, workOrders }: KPIDashboa
           trendValue="Peak at 12:30 PM"
           icon={<Zap className="w-6 h-6" />}
           color="#f59e0b"
-          details={{
-            description: "Daily energy generation from all RTS systems",
-            target: "Weather dependent",
-            progress: 85
-          }}
+          details={kpiDetails.todayGeneration}
         />
 
         <EnhancedKPICard
@@ -392,11 +603,7 @@ export default function KPIDashboard({ kpiData, assets, workOrders }: KPIDashboa
           trendValue="Real-time power"
           icon={<Activity className="w-6 h-6" />}
           color="#8b5cf6"
-          details={{
-            description: "Current power generation from all systems",
-            target: "Varies by time",
-            progress: (realTimeData.livePowerGeneration / (realTimeData.cumulativeCapacity * 0.8)) * 100
-          }}
+          details={kpiDetails.liveGeneration}
         />
       </div>
 
@@ -453,7 +660,7 @@ export default function KPIDashboard({ kpiData, assets, workOrders }: KPIDashboa
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value, name) => [`${value}%`, 'Share']} />
+              <Tooltip formatter={(value) => [`${value}%`, 'Share']} />
             </PieChart>
           </ResponsiveContainer>
           <div className="space-y-2 mt-4">
@@ -521,20 +728,15 @@ export default function KPIDashboard({ kpiData, assets, workOrders }: KPIDashboa
                 dataKey="generation" 
                 stroke="#3b82f6" 
                 fillOpacity={0.3}
-                fill="url(#colorGeneration)" 
+                fill="#3b82f6"
               />
-              <Line 
+              <Area 
                 type="monotone" 
                 dataKey="target" 
                 stroke="#10b981" 
                 strokeDasharray="5 5"
+                fill="transparent"
               />
-              <defs>
-                <linearGradient id="colorGeneration" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
-                </linearGradient>
-              </defs>
             </AreaChart>
           </ResponsiveContainer>
         </div>
