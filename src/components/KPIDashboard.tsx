@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, RadialBarChart, RadialBar } from 'recharts';
-import { TrendingUp, TrendingDown, Zap, Battery, AlertTriangle, CheckCircle, Wrench, Users, Lightbulb, MapPin, Calendar, Activity, X, Play, Pause, Settings, Download, RefreshCw, Eye, Cpu, Wifi, WifiOff, Filter, Search, Bell } from 'lucide-react';
+import { TrendingUp, TrendingDown, Zap, Battery, AlertTriangle, CheckCircle, Wrench, Users, Lightbulb, MapPin, Calendar, Activity, X, Play, Pause, Settings, Download, RefreshCw, Eye, Tool, Cpu, Wifi, WifiOff, Filter, Search, Bell } from 'lucide-react';
 import styled, { keyframes } from 'styled-components';
 
 // Enhanced styling without animations for KPI cards
@@ -1129,3 +1129,4 @@ export default function KPIDashboard() {
     </StyledWrapper>
   );
 }
+ 
