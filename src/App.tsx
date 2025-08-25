@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Satellite, BarChart3, Settings, Users, Bell, Shield, Lightbulb, Brain, Network } from 'lucide-react';
+import { Satellite, BarChart3, Settings, Users, Bell, Shield, Lightbulb, Brain, Network, Sun } from 'lucide-react';
 import GISMap from './components/GISMap';
 import MapControls from './components/MapControls';
 import AssetDetailsPanel from './components/AssetDetailsPanel';
@@ -8,6 +8,7 @@ import KPIDashboard from './components/KPIDashboard';
 import AdvancedAnalytics from './components/AdvancedAnalytics';
 import RecommendationsModule from './components/RecommendationsModule';
 import RiskAssessmentModule from './components/RiskAssessmentModule';
+import RooftopSolarDashboard from './components/RooftopSolarDashboard';
 import { 
   mockAssets, 
   mockWorkOrders, 
@@ -24,7 +25,7 @@ import {
   RiskAssessment, Recommendation
 } from './types';
 
-type ViewMode = 'map' | 'dashboard' | 'analytics' | 'recommendations' | 'risk' | 'settings' | 'users';
+type ViewMode = 'map' | 'dashboard' | 'analytics' | 'recommendations' | 'risk' | 'rooftop' | 'settings' | 'users';
 
 function App() {
   // State management
@@ -323,6 +324,17 @@ function App() {
                 <Shield className="w-4 h-4" />
                 <span>Risk</span>
               </button>
+            <button
+              onClick={() => setViewMode('rooftop')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${
+                viewMode === 'rooftop' 
+                  ? 'bg-blue-600/30 text-blue-400 neon-glow' 
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+              }`}
+            >
+              <Sun className="w-4 h-4" />
+              <span>Rooftop Solar</span>
+            </button>
               <button
               onClick={() => setViewMode('users')}
                 className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${
@@ -459,6 +471,12 @@ function App() {
                   <p className="text-slate-400">User management interface with comprehensive RBAC controls, tenant management, and access permissions.</p>
               </div>
             </div>
+          </div>
+        )}
+
+        {viewMode === 'rooftop' && (
+          <div className="p-6">
+            <RooftopSolarDashboard />
           </div>
         )}
 
